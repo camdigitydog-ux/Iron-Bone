@@ -1,0 +1,251 @@
+@import "tailwindcss";
+
+/*
+ * "Knurl & Bone" — grounded in the barbell-skeleton mark: oxidized iron, moss,
+ * dawn tarmac, and trail dust against soot and bone. Light mode is the same
+ * palette read as raw, unbleached canvas rather than a separate design.
+ */
+:root {
+  --background: #ece4d2;
+  --foreground: #201a12;
+  --surface: #f7f2e6;
+  --surface-elevated: #fdfaf1;
+  --surface-muted: #e0d5ba;
+  --border: #cabb96;
+  --muted-foreground: #6d6047;
+
+  --brand: #a83e1c;
+  --fitness: #a83e1c;
+  --nutrition: #4b6b32;
+  --running: #4c5f72;
+  --trail: #a1762f;
+  --danger: #832a1e;
+
+  --shadow-color: 32 26 18;
+  --grain-opacity: 0.035;
+  --knurl-opacity: 0.05;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-brand: var(--brand);
+  --color-fitness: var(--fitness);
+  --color-nutrition: var(--nutrition);
+  --color-running: var(--running);
+  --color-trail: var(--trail);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-big-shoulders);
+  --font-stencil: var(--font-big-shoulders-stencil);
+  --font-data: var(--font-plex-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0908;
+    --foreground: #ece3d0;
+    --surface: #17130f;
+    --surface-elevated: #1e1912;
+    --surface-muted: #211b14;
+    --border: #322a1e;
+    --muted-foreground: #93876f;
+
+    --brand: #c9541f;
+    --fitness: #c9541f;
+    --nutrition: #74954c;
+    --running: #6c8298;
+    --trail: #c99a49;
+    --danger: #c2432d;
+
+    --shadow-color: 0 0 0;
+    --grain-opacity: 0.05;
+    --knurl-opacity: 0.07;
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: light dark;
+}
+
+/* Brand watermark — the skeleton-and-barbell mark, huge and faint, anchored to
+ * the corner behind everything else. Uses html (not body) for its own ::after
+ * slot, since body's are already spoken for by the grain and vignette below;
+ * a negative z-index here paints behind the whole body element regardless. */
+html::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("/brand/watermark-light-bg.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+@media (prefers-color-scheme: dark) {
+  html::after {
+    background-image: url("/brand/watermark-dark-bg.png");
+    opacity: 0.06;
+  }
+}
+
+body {
+  position: relative;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+}
+
+.font-stencil {
+  font-family: var(--font-stencil), var(--font-display), sans-serif;
+}
+
+/* Reserved for logged numbers — weight, reps, pace, macros — so data reads
+   like an instrument readout instead of prose. */
+.font-data {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Film-grain texture echoing the logo's textured black backdrop. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Soft vignette for a worn, moody edge — like a poster under low light. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% -10%,
+    transparent 45%,
+    rgb(var(--shadow-color) / 0.3) 100%
+  );
+}
+
+/* Reusable grain overlay for elevated surfaces (cards, modals) so texture
+   reads on panels too, not just the page background behind them. */
+.grain-surface {
+  position: relative;
+  isolation: isolate;
+}
+
+.grain-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: calc(var(--grain-opacity) * 0.7);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/*
+ * The signature: knurling, the crosshatched grip texture stamped into a
+ * barbell's shaft. Two crossed repeating gradients form the diamond
+ * pattern — no image asset, so it stays cheap on a PWA.
+ */
+.knurl {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--foreground) 22%, transparent) 0,
+      color-mix(in srgb, var(--foreground) 22%, transparent) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--foreground) 22%, transparent) 0,
+      color-mix(in srgb, var(--foreground) 22%, transparent) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+  opacity: var(--knurl-opacity);
+}
+
+/* Primary buttons grip like a barbell: the knurl only appears under your
+   thumb, on press. */
+.knurl-press {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.knurl-press::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease-out;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgb(255 255 255 / 0.4) 0,
+      rgb(255 255 255 / 0.4) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgb(255 255 255 / 0.4) 0,
+      rgb(255 255 255 / 0.4) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+}
+
+.knurl-press:active::before {
+  opacity: 1;
+}
+
+/* Numerals pressed into metal rather than sitting flat on top of it. */
+.stamped {
+  text-shadow:
+    0 1px 0 rgb(var(--shadow-color) / 0.55),
+    0 -1px 0 color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 30%, transparent);
+}
