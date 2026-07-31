@@ -2,6 +2,9 @@
   "name": "fitness-planner",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
@@ -21,6 +24,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.83.0",
     "recharts": "^3.10.1",
+    "server-only": "^0.0.1",
     "serwist": "^9.5.12",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
@@ -28,7 +32,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { navItems } from "./navItems";
 import { BrandBadge } from "./BrandBadge";
+import { LogoutButton } from "./LogoutButton";
 
-export function Sidebar() {
+export function Sidebar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
   return (
     <aside className="hidden w-60 shrink-0 border-r border-border bg-surface px-3 py-6 md:flex md:flex-col">
@@ -41,6 +42,12 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-border px-3 pt-4">
+        <p className="truncate text-xs font-medium text-muted-foreground" title={userEmail}>
+          {userEmail}
+        </p>
+        <LogoutButton />
+      </div>
     </aside>
   );
 }
