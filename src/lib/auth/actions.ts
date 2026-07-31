@@ -18,7 +18,7 @@ export async function signup(_state: AuthFormState, formData: FormData): Promise
 
   const { email, password } = validated.data;
 
-  if (findUserByEmail(email)) {
+  if (await findUserByEmail(email)) {
     return { fieldErrors: { email: ["An account with this email already exists."] } };
   }
 
@@ -26,7 +26,7 @@ export async function signup(_state: AuthFormState, formData: FormData): Promise
 
   let userId: string;
   try {
-    userId = createUser(email, passwordHash).id;
+    userId = (await createUser(email, passwordHash)).id;
   } catch {
     return { error: "Could not create your account. Please try again." };
   }
@@ -46,7 +46,7 @@ export async function login(_state: AuthFormState, formData: FormData): Promise<
   }
 
   const { email, password } = validated.data;
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return { error: "Incorrect email or password." };
