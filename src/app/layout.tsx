@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Big_Shoulders, Big_Shoulders_Stencil, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { AppProviders } from "@/lib/providers/AppProviders";
-import { AppShell } from "@/components/layout/AppShell";
 
 const bigShoulders = Big_Shoulders({
   variable: "--font-big-shoulders",
@@ -60,11 +58,7 @@ export default function RootLayout({
       lang="en"
       className={`${bigShoulders.variable} ${bigShouldersStencil.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <AppProviders>
-          <AppShell>{children}</AppShell>
-        </AppProviders>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
