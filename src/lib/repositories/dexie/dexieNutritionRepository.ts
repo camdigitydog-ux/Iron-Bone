@@ -1,5 +1,5 @@
 import type { FitnessPlannerDB } from "@/lib/db/schema";
-import type { FoodItem, MealEntry, NutritionGoal, ID } from "@/lib/domain";
+import type { FoodItem, MealEntry, NutritionGoal, BodyWeightEntry, ID } from "@/lib/domain";
 import type { NutritionRepository, CreateInput, UpdatePatch, DateRange } from "../types";
 import { createEntity, updateEntity } from "./helpers";
 
@@ -58,5 +58,18 @@ export class DexieNutritionRepository implements NutritionRepository {
 
   createGoal(input: CreateInput<NutritionGoal>): Promise<NutritionGoal> {
     return createEntity<NutritionGoal>(this.db.nutritionGoals, input);
+  }
+
+  async listBodyWeightEntries(range?: DateRange): Promise<BodyWeightEntry[]> {
+    if (!range) return this.db.bodyWeightEntries.orderBy("date").toArray();
+    return this.db.bodyWeightEntries.where("date").between(range.from, range.to, true, true).toArray();
+  }
+
+  async getLatestBodyWeightEntry(): Promise<BodyWeightEntry | undefined> {
+    return this.db.bodyWeightEntries.orderBy("date").last();
+  }
+
+  createBodyWeightEntry(input: CreateInput<BodyWeightEntry>): Promise<BodyWeightEntry> {
+    return createEntity<BodyWeightEntry>(this.db.bodyWeightEntries, input);
   }
 }

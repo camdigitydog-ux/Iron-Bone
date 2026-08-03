@@ -40,6 +40,11 @@ export default function NutritionPage() {
               Goals
             </Button>
           </Link>
+          <Link href="/nutrition/weight">
+            <Button variant="secondary" size="sm">
+              Weight
+            </Button>
+          </Link>
           <Link href="/nutrition/history">
             <Button size="sm" tone="nutrition">
               History

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +23,7 @@ type GoalFormValues = z.output<typeof goalSchema>;
 
 export function GoalForm({ currentGoal }: { currentGoal?: NutritionGoal | null }) {
   const createGoal = useCreateGoal();
+  const [basedOnWeightLb, setBasedOnWeightLb] = useState<number | undefined>(currentGoal?.basedOnWeightLb);
   const {
     register,
     handleSubmit,
@@ -38,7 +40,7 @@ export function GoalForm({ currentGoal }: { currentGoal?: NutritionGoal | null }
   });
 
   async function onSubmit(values: GoalFormValues) {
-    await createGoal.mutateAsync({ effectiveDate: todayKey(), ...values });
+    await createGoal.mutateAsync({ effectiveDate: todayKey(), ...values, basedOnWeightLb });
   }
 
   function handleCalculated(calculated: CalculatedGoal) {
@@ -46,6 +48,7 @@ export function GoalForm({ currentGoal }: { currentGoal?: NutritionGoal | null }
     setValue("proteinG", calculated.proteinG, { shouldValidate: true });
     setValue("carbsG", calculated.carbsG, { shouldValidate: true });
     setValue("fatG", calculated.fatG, { shouldValidate: true });
+    setBasedOnWeightLb(calculated.weightLb);
   }
 
   return (

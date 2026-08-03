@@ -43,6 +43,9 @@ export interface CalculatedGoal {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** The body weight this estimate was based on, so the goal can later be
+   * flagged for recalculation once weight has drifted enough to matter. */
+  weightLb: number;
 }
 
 /**
@@ -83,5 +86,5 @@ export function calculateNutritionGoal({
   const fatG = Math.round((dailyCalories * 0.25) / 9);
   const carbsG = Math.max(0, Math.round((dailyCalories - proteinG * 4 - fatG * 9) / 4));
 
-  return { bmr: Math.round(bmr), tdee: Math.round(tdee), dailyCalories, proteinG, carbsG, fatG };
+  return { bmr: Math.round(bmr), tdee: Math.round(tdee), dailyCalories, proteinG, carbsG, fatG, weightLb };
 }

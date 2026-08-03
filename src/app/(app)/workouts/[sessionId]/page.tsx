@@ -5,12 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import { Button, Textarea } from "@/components/ui";
 import {
   useWorkoutSession,
+  useWorkoutSessions,
   useUpdateWorkoutSession,
   useDeleteWorkoutSession,
 } from "@/features/workouts/hooks/useWorkoutSessions";
 import { useExerciseMap } from "@/features/workouts/hooks/useExercises";
 import { SessionExerciseCard } from "@/features/workouts/components/SessionExerciseCard";
 import { ExercisePicker } from "@/features/workouts/components/ExercisePicker";
+import { findLastPerformance } from "@/features/workouts/utils/exerciseHistory";
 import { formatFriendlyDate } from "@/lib/utils/date";
 import { newId } from "@/lib/utils/id";
 import type { SessionExercise, ID } from "@/lib/domain";
@@ -19,6 +21,7 @@ export default function WorkoutSessionPage() {
   const params = useParams<{ sessionId: string }>();
   const router = useRouter();
   const { data: session, isLoading } = useWorkoutSession(params.sessionId);
+  const { data: allSessions = [] } = useWorkoutSessions();
   const exerciseMap = useExerciseMap();
   const updateSession = useUpdateWorkoutSession();
   const deleteSession = useDeleteWorkoutSession();
@@ -92,6 +95,12 @@ export default function WorkoutSessionPage() {
             key={sessionExercise.id}
             sessionExercise={sessionExercise}
             exercise={exerciseMap.get(sessionExercise.exerciseId)}
+            lastPerformance={findLastPerformance(
+              allSessions,
+              sessionExercise.exerciseId,
+              session.id,
+              exerciseMap.get(sessionExercise.exerciseId),
+            )}
             onChange={(next) => updateExercise(sessionExercise.id, next)}
             onRemove={() => removeExercise(sessionExercise.id)}
           />

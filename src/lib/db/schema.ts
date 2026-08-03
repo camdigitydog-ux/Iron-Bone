@@ -6,6 +6,7 @@ import type {
   FoodItem,
   MealEntry,
   NutritionGoal,
+  BodyWeightEntry,
   RunEntry,
   RunPlan,
   PlannerEntry,
@@ -23,6 +24,7 @@ export class FitnessPlannerDB extends Dexie {
   foodItems!: EntityTable<FoodItem, "id">;
   mealEntries!: EntityTable<MealEntry, "id">;
   nutritionGoals!: EntityTable<NutritionGoal, "id">;
+  bodyWeightEntries!: EntityTable<BodyWeightEntry, "id">;
   runEntries!: EntityTable<RunEntry, "id">;
   runPlans!: EntityTable<RunPlan, "id">;
   plannerEntries!: EntityTable<PlannerEntry, "id">;
@@ -42,6 +44,10 @@ export class FitnessPlannerDB extends Dexie {
       runPlans: "id, isActive, startDate",
       plannerEntries: "id, date, itemType, status",
       meta: "key",
+    });
+
+    this.version(2).stores({
+      bodyWeightEntries: "id, date",
     });
   }
 }

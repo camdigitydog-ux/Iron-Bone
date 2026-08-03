@@ -36,6 +36,16 @@ export interface NutritionGoal extends BaseEntity {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** Body weight the calculator used to derive this goal, if it was
+   * calculated rather than entered by hand — lets the app notice when
+   * weight has drifted enough (10-15lb) to be worth recalculating. */
+  basedOnWeightLb?: number;
+}
+
+export interface BodyWeightEntry extends BaseEntity {
+  date: string; // yyyy-MM-dd
+  weightLb: number;
+  notes?: string;
 }
 
 export function mealMacros(meal: MealEntry): Macros {

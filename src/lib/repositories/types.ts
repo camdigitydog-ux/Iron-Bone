@@ -7,6 +7,7 @@ import type {
   FoodItem,
   MealEntry,
   NutritionGoal,
+  BodyWeightEntry,
   RunEntry,
   RunPlan,
   PlannerEntry,
@@ -53,6 +54,10 @@ export interface NutritionRepository {
   getActiveGoal(date: string): Promise<NutritionGoal | undefined>;
   listGoals(): Promise<NutritionGoal[]>;
   createGoal(input: CreateInput<NutritionGoal>): Promise<NutritionGoal>;
+
+  listBodyWeightEntries(range?: DateRange): Promise<BodyWeightEntry[]>;
+  getLatestBodyWeightEntry(): Promise<BodyWeightEntry | undefined>;
+  createBodyWeightEntry(input: CreateInput<BodyWeightEntry>): Promise<BodyWeightEntry>;
 }
 
 export interface RunningRepository {

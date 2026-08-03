@@ -17,6 +17,8 @@ export const nutritionKeys = {
   mealsByDate: (date: string) => [...nutritionKeys.all, "meals", "date", date] as const,
   goals: () => [...nutritionKeys.all, "goals"] as const,
   activeGoal: (date: string) => [...nutritionKeys.all, "goals", "active", date] as const,
+  bodyWeight: (range?: DateRange) => [...nutritionKeys.all, "bodyWeight", range ?? "all"] as const,
+  latestBodyWeight: () => [...nutritionKeys.all, "bodyWeight", "latest"] as const,
 };
 
 export const runningKeys = {

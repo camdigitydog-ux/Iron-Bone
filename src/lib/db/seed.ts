@@ -17,6 +17,7 @@ import type {
 
 const SEEDED_FLAG_KEY = "hasSeededInitialData";
 const EXERCISE_LIBRARY_MIGRATION_KEY = "hasMigratedExerciseLibraryV4";
+const FOOD_LIBRARY_MIGRATION_KEY = "hasMigratedFoodLibraryV2";
 
 interface ExerciseSeed {
   name: string;
@@ -1202,88 +1203,98 @@ async function migrateExerciseLibrary(): Promise<void> {
   if (toUpdate.length > 0) await db.exercises.bulkPut(toUpdate);
 }
 
+type FoodSeed = [name: string, servingSize: number, servingUnit: string, macros: FoodItem["macrosPerServing"]];
+
+// Macro values are standard USDA-style figures for the common preparation named
+// (e.g. "cooked", "raw", "steamed") — the same reference figures used in most
+// nutrition-tracking apps and food-label databases.
+const CURATED_FOODS: FoodSeed[] = [
+  // Protein
+  ["Chicken Breast (cooked)", 3.5, "oz", { calories: 165, proteinG: 31, carbsG: 0, fatG: 3.6 }],
+  ["Turkey Breast (roasted)", 3.5, "oz", { calories: 135, proteinG: 30.1, carbsG: 0, fatG: 0.7 }],
+  ["Lean Ground Beef 93/7 (cooked)", 3.5, "oz", { calories: 152, proteinG: 21, carbsG: 0, fatG: 7 }],
+  ["Salmon (cooked)", 3.5, "oz", { calories: 208, proteinG: 20.4, carbsG: 0, fatG: 13.4 }],
+  ["Tuna (canned in water)", 3.5, "oz", { calories: 116, proteinG: 25.5, carbsG: 0, fatG: 0.8 }],
+  ["Shrimp (cooked)", 3.5, "oz", { calories: 99, proteinG: 24, carbsG: 0.2, fatG: 0.3 }],
+  ["Pork Tenderloin (cooked)", 3.5, "oz", { calories: 143, proteinG: 26, carbsG: 0, fatG: 3.5 }],
+  ["Egg (whole)", 1, "piece", { calories: 72, proteinG: 6.3, carbsG: 0.4, fatG: 4.8 }],
+  ["Egg White", 1, "piece", { calories: 17, proteinG: 3.6, carbsG: 0.2, fatG: 0.1 }],
+  ["Tofu (firm)", 3.5, "oz", { calories: 76, proteinG: 8, carbsG: 1.9, fatG: 4.8 }],
+  ["Black Beans (cooked)", 3.5, "oz", { calories: 132, proteinG: 8.9, carbsG: 23.7, fatG: 0.5 }],
+  ["Lentils (cooked)", 3.5, "oz", { calories: 116, proteinG: 9, carbsG: 20.1, fatG: 0.4 }],
+  ["Cottage Cheese (2%)", 3.5, "oz", { calories: 84, proteinG: 11.1, carbsG: 4.3, fatG: 2.3 }],
+  ["Greek Yogurt (plain, 2%)", 3.5, "oz", { calories: 73, proteinG: 9.9, carbsG: 3.8, fatG: 1.9 }],
+  ["Whey Protein Powder", 1, "scoop", { calories: 120, proteinG: 24, carbsG: 3, fatG: 1.5 }],
+  ["Protein Bar (generic)", 1, "bar", { calories: 200, proteinG: 20, carbsG: 22, fatG: 7 }],
+
+  // Carbohydrate
+  ["Brown Rice (cooked)", 3.5, "oz", { calories: 112, proteinG: 2.3, carbsG: 23.5, fatG: 0.8 }],
+  ["White Rice (cooked)", 3.5, "oz", { calories: 130, proteinG: 2.7, carbsG: 28.2, fatG: 0.3 }],
+  ["Quinoa (cooked)", 3.5, "oz", { calories: 120, proteinG: 4.4, carbsG: 21.3, fatG: 1.9 }],
+  ["Pasta (cooked)", 3.5, "oz", { calories: 131, proteinG: 5, carbsG: 25, fatG: 1.1 }],
+  ["Rolled Oats (dry)", 3.5, "oz", { calories: 379, proteinG: 13.2, carbsG: 67.7, fatG: 6.5 }],
+  ["Sweet Potato (baked)", 3.5, "oz", { calories: 90, proteinG: 2, carbsG: 20.7, fatG: 0.1 }],
+  ["Potato (baked, with skin)", 3.5, "oz", { calories: 93, proteinG: 2.5, carbsG: 21, fatG: 0.1 }],
+  ["Whole Wheat Bread", 1, "slice", { calories: 81, proteinG: 4, carbsG: 13.8, fatG: 1.1 }],
+  ["White Bread", 1, "slice", { calories: 79, proteinG: 2.7, carbsG: 14.7, fatG: 1 }],
+  ["Corn Tortilla", 1, "piece", { calories: 52, proteinG: 1.4, carbsG: 10.7, fatG: 0.6 }],
+
+  // Fat
+  ["Olive Oil", 1, "tbsp", { calories: 119, proteinG: 0, carbsG: 0, fatG: 13.5 }],
+  ["Almonds", 1, "oz", { calories: 164, proteinG: 6, carbsG: 6.1, fatG: 14.2 }],
+  ["Walnuts", 1, "oz", { calories: 185, proteinG: 4.3, carbsG: 3.9, fatG: 18.5 }],
+  ["Peanut Butter", 2, "tbsp", { calories: 188, proteinG: 8, carbsG: 6, fatG: 16 }],
+  ["Avocado", 0.5, "piece", { calories: 120, proteinG: 1.5, carbsG: 6.4, fatG: 10.9 }],
+  ["Chia Seeds", 1, "tbsp", { calories: 58, proteinG: 2, carbsG: 5, fatG: 3.7 }],
+  ["Butter", 1, "tbsp", { calories: 102, proteinG: 0.1, carbsG: 0, fatG: 11.5 }],
+
+  // Vegetables
+  ["Broccoli (steamed)", 3.5, "oz", { calories: 35, proteinG: 2.4, carbsG: 7.2, fatG: 0.4 }],
+  ["Spinach (raw)", 3.5, "oz", { calories: 23, proteinG: 2.9, carbsG: 3.6, fatG: 0.4 }],
+  ["Bell Pepper (raw)", 3.5, "oz", { calories: 31, proteinG: 1, carbsG: 6, fatG: 0.3 }],
+  ["Carrots (raw)", 3.5, "oz", { calories: 41, proteinG: 0.9, carbsG: 9.6, fatG: 0.2 }],
+  ["Asparagus (steamed)", 3.5, "oz", { calories: 22, proteinG: 2.4, carbsG: 4.1, fatG: 0.2 }],
+  ["Green Beans (steamed)", 3.5, "oz", { calories: 35, proteinG: 1.9, carbsG: 8, fatG: 0.2 }],
+  ["Cauliflower (steamed)", 3.5, "oz", { calories: 23, proteinG: 1.8, carbsG: 4.1, fatG: 0.5 }],
+  ["Mixed Salad Greens", 3.5, "oz", { calories: 15, proteinG: 1.4, carbsG: 2.9, fatG: 0.2 }],
+
+  // Fruit
+  ["Apple", 1, "piece", { calories: 95, proteinG: 0.5, carbsG: 25, fatG: 0.3 }],
+  ["Banana", 1, "piece", { calories: 105, proteinG: 1.3, carbsG: 27, fatG: 0.4 }],
+  ["Orange", 1, "piece", { calories: 62, proteinG: 1.2, carbsG: 15.4, fatG: 0.2 }],
+  ["Strawberries", 3.5, "oz", { calories: 32, proteinG: 0.7, carbsG: 7.7, fatG: 0.3 }],
+  ["Blueberries", 3.5, "oz", { calories: 57, proteinG: 0.7, carbsG: 14.5, fatG: 0.3 }],
+  ["Grapes", 3.5, "oz", { calories: 69, proteinG: 0.7, carbsG: 18.1, fatG: 0.2 }],
+
+  // Dairy
+  ["Milk (2%)", 1, "cup", { calories: 122, proteinG: 8.1, carbsG: 11.7, fatG: 4.8 }],
+  ["Milk (whole)", 1, "cup", { calories: 149, proteinG: 7.7, carbsG: 11.7, fatG: 7.9 }],
+  ["Cheddar Cheese", 1, "oz", { calories: 113, proteinG: 7, carbsG: 0.4, fatG: 9.3 }],
+  ["String Cheese", 1, "piece", { calories: 80, proteinG: 7, carbsG: 1, fatG: 6 }],
+];
+
+function foodSeedName(seed: FoodSeed): string {
+  return seed[0];
+}
+
+function buildFoodItem(seed: FoodSeed): FoodItem {
+  const [name, servingSize, servingUnit, macros] = seed;
+  return makeFood(name, servingSize, servingUnit, macros);
+}
+
 async function seedFoods(): Promise<void> {
-  const foods: FoodItem[] = [
-    makeFood("Chicken Breast (cooked)", 3.5, "oz", {
-      calories: 165,
-      proteinG: 31,
-      carbsG: 0,
-      fatG: 3.6,
-    }),
-    makeFood("Brown Rice (cooked)", 3.5, "oz", {
-      calories: 112,
-      proteinG: 2.3,
-      carbsG: 23.5,
-      fatG: 0.8,
-    }),
-    makeFood("Egg (whole)", 1, "piece", {
-      calories: 72,
-      proteinG: 6.3,
-      carbsG: 0.4,
-      fatG: 4.8,
-    }),
-    makeFood("Rolled Oats (dry)", 3.5, "oz", {
-      calories: 379,
-      proteinG: 13.2,
-      carbsG: 67.7,
-      fatG: 6.5,
-    }),
-    makeFood("Greek Yogurt (plain, 2%)", 3.5, "oz", {
-      calories: 73,
-      proteinG: 9.9,
-      carbsG: 3.8,
-      fatG: 1.9,
-    }),
-    makeFood("Banana", 1, "piece", {
-      calories: 105,
-      proteinG: 1.3,
-      carbsG: 27,
-      fatG: 0.4,
-    }),
-    makeFood("Olive Oil", 1, "tbsp", {
-      calories: 119,
-      proteinG: 0,
-      carbsG: 0,
-      fatG: 13.5,
-    }),
-    makeFood("Broccoli (steamed)", 3.5, "oz", {
-      calories: 35,
-      proteinG: 2.4,
-      carbsG: 7.2,
-      fatG: 0.4,
-    }),
-    makeFood("Salmon (cooked)", 3.5, "oz", {
-      calories: 208,
-      proteinG: 20.4,
-      carbsG: 0,
-      fatG: 13.4,
-    }),
-    makeFood("Whole Wheat Bread", 1, "slice", {
-      calories: 81,
-      proteinG: 4,
-      carbsG: 13.8,
-      fatG: 1.1,
-    }),
-    makeFood("Almonds", 1, "oz", {
-      calories: 164,
-      proteinG: 6,
-      carbsG: 6.1,
-      fatG: 14.2,
-    }),
-    makeFood("Sweet Potato (baked)", 3.5, "oz", {
-      calories: 90,
-      proteinG: 2,
-      carbsG: 20.7,
-      fatG: 0.1,
-    }),
-    makeFood("Whey Protein Powder", 1, "scoop", {
-      calories: 120,
-      proteinG: 24,
-      carbsG: 3,
-      fatG: 1.5,
-    }),
-  ];
-  await db.foodItems.bulkAdd(foods);
+  await db.foodItems.bulkAdd(CURATED_FOODS.map(buildFoodItem));
+}
+
+/** Adds any newly curated foods a device's library is missing, by name —
+ * mirrors migrateExerciseLibrary's add-only approach so it never touches a
+ * user's own custom foods or overwrites one they've edited. */
+async function migrateFoodLibrary(): Promise<void> {
+  const existing = await db.foodItems.toArray();
+  const existingNames = new Set(existing.filter((food) => !food.isCustom).map((food) => food.name));
+
+  const toAdd = CURATED_FOODS.filter((seed) => !existingNames.has(foodSeedName(seed))).map(buildFoodItem);
+  if (toAdd.length > 0) await db.foodItems.bulkAdd(toAdd);
 }
 
 async function seedWorkoutTemplate(exerciseIds: Record<string, string>): Promise<void> {
@@ -1404,6 +1415,7 @@ export async function seedIfEmpty(): Promise<void> {
       await seedRunPlan();
       await db.meta.put({ key: SEEDED_FLAG_KEY, value: "true" });
       await db.meta.put({ key: EXERCISE_LIBRARY_MIGRATION_KEY, value: "true" });
+      await db.meta.put({ key: FOOD_LIBRARY_MIGRATION_KEY, value: "true" });
     },
   );
 }
@@ -1417,5 +1429,17 @@ export async function migrateExerciseLibraryIfNeeded(): Promise<void> {
   await db.transaction("rw", [db.exercises, db.meta], async () => {
     await migrateExerciseLibrary();
     await db.meta.put({ key: EXERCISE_LIBRARY_MIGRATION_KEY, value: "true" });
+  });
+}
+
+/** Runs once per device to add newly curated foods to an existing library —
+ * safe to call unconditionally on every app start. */
+export async function migrateFoodLibraryIfNeeded(): Promise<void> {
+  const flag = await db.meta.get(FOOD_LIBRARY_MIGRATION_KEY);
+  if (flag) return;
+
+  await db.transaction("rw", [db.foodItems, db.meta], async () => {
+    await migrateFoodLibrary();
+    await db.meta.put({ key: FOOD_LIBRARY_MIGRATION_KEY, value: "true" });
   });
 }

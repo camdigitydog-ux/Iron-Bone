@@ -3,16 +3,21 @@
 import { useState } from "react";
 import { Badge, Button, Card, Input } from "@/components/ui";
 import { newId } from "@/lib/utils/id";
+import { round } from "@/lib/utils/format";
+import { formatFriendlyDate } from "@/lib/utils/date";
+import type { LastPerformance } from "../utils/exerciseHistory";
 import type { ExerciseDefinition, SessionExercise, SetEntry } from "@/lib/domain";
 
 export function SessionExerciseCard({
   exercise,
   sessionExercise,
+  lastPerformance,
   onChange,
   onRemove,
 }: {
   exercise: ExerciseDefinition | undefined;
   sessionExercise: SessionExercise;
+  lastPerformance?: LastPerformance;
   onChange: (next: SessionExercise) => void;
   onRemove: () => void;
 }) {
@@ -75,6 +80,22 @@ export function SessionExerciseCard({
         </ol>
       )}
 
+      {lastPerformance && (
+        <div className="rounded-lg border border-dashed border-border bg-surface-muted/30 px-3 py-2 text-xs">
+          <p className="text-muted-foreground">
+            Last time ({formatFriendlyDate(lastPerformance.date)}):{" "}
+            <span className="font-data font-semibold text-foreground">
+              {lastPerformance.topSet.weightLb} lb × {lastPerformance.topSet.reps}
+            </span>
+            {lastPerformance.topSet.rpe ? ` @ RPE ${lastPerformance.topSet.rpe}` : ""} · Est. 1RM{" "}
+            <span className="font-data">{round(lastPerformance.estimatedOneRm)} lb</span>
+          </p>
+          <p className="mt-0.5 font-semibold text-fitness">
+            Try {lastPerformance.suggestedNextWeightLb} lb today
+          </p>
+        </div>
+      )}
+
       {sessionExercise.sets.length > 0 ? (
         <div className="space-y-2">
           <div className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] gap-2 text-xs font-medium text-muted-foreground">
@@ -86,13 +107,20 @@ export function SessionExerciseCard({
           </div>
           {sessionExercise.sets.map((set) => (
             <div key={set.id} className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center gap-2">
-              {set.isWarmup ? (
-                <Badge tone="trail" className="justify-center px-1.5">
-                  W
-                </Badge>
-              ) : (
-                <span className="font-data text-sm text-muted-foreground">{set.setNumber}</span>
-              )}
+              <button
+                type="button"
+                onClick={() => updateSet(set.id, { isWarmup: !set.isWarmup })}
+                aria-label={set.isWarmup ? "Mark as working set" : "Mark as warm-up set"}
+                title={set.isWarmup ? "Warm-up — click to mark as a working set" : "Click to mark as a warm-up set"}
+              >
+                {set.isWarmup ? (
+                  <Badge tone="trail" className="justify-center px-1.5">
+                    W
+                  </Badge>
+                ) : (
+                  <span className="font-data text-sm text-muted-foreground">{set.setNumber}</span>
+                )}
+              </button>
               <Input
                 type="number"
                 min={0}
