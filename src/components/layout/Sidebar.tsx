@@ -7,7 +7,7 @@ import { navItems } from "./navItems";
 import { BrandBadge } from "./BrandBadge";
 import { LogoutButton } from "./LogoutButton";
 
-export function Sidebar({ userEmail }: { userEmail: string }) {
+export function Sidebar({ userEmail }: { userEmail: string | null }) {
   const pathname = usePathname();
   return (
     <aside className="hidden w-60 shrink-0 border-r border-border bg-surface px-3 py-6 md:flex md:flex-col">
@@ -43,10 +43,21 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
         })}
       </nav>
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-border px-3 pt-4">
-        <p className="truncate text-xs font-medium text-muted-foreground" title={userEmail}>
-          {userEmail}
-        </p>
-        <LogoutButton />
+        {userEmail ? (
+          <>
+            <p className="truncate text-xs font-medium text-muted-foreground" title={userEmail}>
+              {userEmail}
+            </p>
+            <LogoutButton />
+          </>
+        ) : (
+          <div>
+            <Link href="/login" className="text-xs font-semibold text-fitness hover:underline">
+              Sign in
+            </Link>
+            <p className="text-[11px] text-muted-foreground">Sync your data across devices</p>
+          </div>
+        )}
       </div>
     </aside>
   );

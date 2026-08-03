@@ -2,12 +2,19 @@ import "server-only";
 import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import fs from "node:fs";
-import type { DbDriver, DbUser, DbSessionWithUser } from "./types";
+import type { DbDriver, DbUser, DbSessionWithUser, DbUserData } from "./types";
 
 const dataDir = path.join(process.cwd(), "data");
 fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new DatabaseSync(path.join(dataDir, "iron-bone.db"));
+
+// node:sqlite's .get() returns an [Object: null prototype], which Next.js
+// rejects when a Server Action tries to send it to a Client Component
+// ("Only plain objects... can be passed"). Reconstruct as a plain object.
+function toPlain<T extends object>(row: T | undefined): T | undefined {
+  return row ? ({ ...row } as T) : undefined;
+}
 
 // Multiple Next.js build/dev worker processes can open this file at nearly the
 // same instant on first run, racing to create the schema below. A busy timeout
@@ -32,15 +39,22 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id);
+
+  CREATE TABLE IF NOT EXISTS user_data (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    data TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 export const sqliteDriver: DbDriver = {
   async findUserByEmail(email) {
-    return db
+    const row = db
       .prepare(
         "SELECT id, email, password_hash as passwordHash, created_at as createdAt FROM users WHERE email = ?",
       )
       .get(email) as DbUser | undefined;
+    return toPlain(row);
   },
 
   async insertUser(user) {
@@ -62,7 +76,7 @@ export const sqliteDriver: DbDriver = {
   },
 
   async findSessionWithUser(sessionId) {
-    return db
+    const row = db
       .prepare(
         `SELECT sessions.user_id as userId, sessions.expires_at as expiresAt, users.email as email
          FROM sessions
@@ -70,9 +84,24 @@ export const sqliteDriver: DbDriver = {
          WHERE sessions.id = ?`,
       )
       .get(sessionId) as DbSessionWithUser | undefined;
+    return toPlain(row);
   },
 
   async deleteSession(sessionId) {
     db.prepare("DELETE FROM sessions WHERE id = ?").run(sessionId);
+  },
+
+  async getUserData(userId) {
+    const row = db
+      .prepare("SELECT data, updated_at as updatedAt FROM user_data WHERE user_id = ?")
+      .get(userId) as DbUserData | undefined;
+    return toPlain(row);
+  },
+
+  async setUserData(userId, data, updatedAt) {
+    db.prepare(
+      `INSERT INTO user_data (user_id, data, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
+    ).run(userId, data, updatedAt);
   },
 };

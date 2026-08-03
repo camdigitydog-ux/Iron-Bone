@@ -2,6 +2,7 @@ import { newId } from "@/lib/utils/id";
 import { shuffle } from "@/lib/utils/random";
 import type { ExerciseDefinition, ExerciseLevel, TemplateExercise, ID } from "@/lib/domain";
 import { STYLE_PARAMS, type TrainingStyle } from "./trainingStyles";
+import { WOD_ONLY_MOVEMENTS } from "./generateWod";
 
 export interface GenerateWorkoutOptions {
   muscleGroups: string[];
@@ -63,6 +64,9 @@ export function generateWorkout(
   const orderedAccessory: ExerciseDefinition[] = [];
 
   function passesFilters(exercise: ExerciseDefinition): boolean {
+    // WOD-only movements (thrusters, box jumps, double-unders...) belong to the
+    // CrossFit metcon generator, not a straight-sets session in any other style.
+    if (WOD_ONLY_MOVEMENTS.has(exercise.name)) return false;
     if (equipment && equipment.length > 0 && exercise.equipment && !equipment.includes(exercise.equipment)) {
       return false;
     }

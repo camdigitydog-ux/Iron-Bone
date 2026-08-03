@@ -1,10 +1,17 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { BrandBadge } from "./BrandBadge";
 import { LogoutButton } from "./LogoutButton";
 
-export function AppShell({ children, userEmail }: { children: ReactNode; userEmail: string }) {
+export function AppShell({
+  children,
+  userEmail,
+}: {
+  children: ReactNode;
+  userEmail: string | null;
+}) {
   return (
     <div className="flex min-h-screen">
       <Sidebar userEmail={userEmail} />
@@ -14,7 +21,13 @@ export function AppShell({ children, userEmail }: { children: ReactNode; userEma
           <p className="font-display flex-1 text-lg font-semibold uppercase tracking-wide">
             Iron Bone
           </p>
-          <LogoutButton />
+          {userEmail ? (
+            <LogoutButton />
+          ) : (
+            <Link href="/login" className="text-xs font-semibold text-fitness hover:underline">
+              Sign in
+            </Link>
+          )}
         </header>
         <main className="flex-1 px-4 pb-20 pt-4 md:px-8 md:pb-8 md:pt-6">
           <div className="mx-auto w-full max-w-4xl">{children}</div>

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { addWeeks } from "date-fns";
-import { Button, FormField, Input, Select } from "@/components/ui";
+import { Button, Card, FormField, Input, Select } from "@/components/ui";
 import { useActiveRunPlan, useCreateRunPlan, useUpdateRunPlan } from "../hooks/useRunPlans";
 import { generateRunPlan, DEFAULT_DAYS_PER_WEEK_BY_EXPERIENCE } from "../utils/generateRunPlan";
+import { PlanOverview } from "./PlanOverview";
 import { dateKey } from "@/lib/utils/date";
 import { RACE_TYPES, RUNNING_EXPERIENCE_LEVELS } from "@/lib/domain";
-import type { RaceType, RunningExperience } from "@/lib/domain";
+import type { RaceType, RunningExperience, RunPlan } from "@/lib/domain";
 
 const DISTANCE_PRESETS: { label: string; miles: number }[] = [
   { label: "5K", miles: 3.1 },
@@ -29,6 +30,7 @@ export function RaceTrainingPlanForm() {
   const [daysPerWeek, setDaysPerWeek] = useState(DEFAULT_DAYS_PER_WEEK_BY_EXPERIENCE.intermediate);
   const [raceDate, setRaceDate] = useState(dateKey(addWeeks(new Date(), 12)));
   const [bodyWeightLb, setBodyWeightLb] = useState(160);
+  const [previewPlan, setPreviewPlan] = useState<RunPlan | null>(null);
 
   const isSaving = createPlan.isPending || updatePlan.isPending;
 
@@ -37,8 +39,8 @@ export function RaceTrainingPlanForm() {
     setDaysPerWeek(DEFAULT_DAYS_PER_WEEK_BY_EXPERIENCE[next]);
   }
 
-  async function handleGenerate() {
-    const generated = generateRunPlan({
+  function handleGenerate() {
+    const draft = generateRunPlan({
       raceType,
       raceDistanceMiles,
       experience,
@@ -46,13 +48,23 @@ export function RaceTrainingPlanForm() {
       daysPerWeek,
       bodyWeightLb,
     });
+    // Not persisted yet — just a preview until the runner picks "Select this plan."
+    const timestamp = new Date().toISOString();
+    setPreviewPlan({ ...draft, id: "preview", createdAt: timestamp, updatedAt: timestamp });
+  }
+
+  async function handleSelectPlan() {
+    if (!previewPlan) return;
     // Create the new plan before deactivating the old one so there's never a moment
     // with zero active plans (which would make the active-plan query resolve to none).
+    // previewPlan's placeholder id/createdAt/updatedAt are extra properties the
+    // create call ignores — the repository assigns its own.
     const previousActiveId = activePlan?.id;
-    await createPlan.mutateAsync(generated);
+    await createPlan.mutateAsync(previewPlan);
     if (previousActiveId) {
       await updatePlan.mutateAsync({ id: previousActiveId, patch: { isActive: false } });
     }
+    setPreviewPlan(null);
   }
 
   return (
@@ -131,12 +143,33 @@ export function RaceTrainingPlanForm() {
         ))}
       </div>
 
-      <Button onClick={handleGenerate} disabled={isSaving} className="w-full">
-        {isSaving ? "Generating…" : "Generate training plan"}
+      <Button
+        onClick={handleGenerate}
+        variant={previewPlan ? "secondary" : "primary"}
+        disabled={isSaving}
+        className="w-full"
+      >
+        {previewPlan ? "Regenerate" : "Generate training plan"}
       </Button>
-      {activePlan && (
+
+      {previewPlan && (
+        <Card accent="running" className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</p>
+            <p className="text-xs text-muted-foreground">
+              Not saved yet — review the weeks below, then select it to make it your active plan.
+            </p>
+          </div>
+          <PlanOverview plan={previewPlan} />
+          <Button onClick={handleSelectPlan} disabled={isSaving} tone="running" className="w-full">
+            {isSaving ? "Selecting…" : "Select this plan"}
+          </Button>
+        </Card>
+      )}
+
+      {!previewPlan && activePlan && (
         <p className="text-xs text-muted-foreground">
-          Generating a new plan replaces whichever plan is currently active.
+          Selecting a new plan replaces whichever plan is currently active.
         </p>
       )}
     </div>

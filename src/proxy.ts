@@ -11,13 +11,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Signing in is optional — it only unlocks cross-device sync, so the app
+  // itself (local-only Dexie data) stays fully usable without an account.
+  // The one gate that remains: a signed-in visitor shouldn't land back on
+  // the login/signup forms.
   const hasSession = request.cookies.has(SESSION_COOKIE_NAME);
   const isPublicRoute = PUBLIC_ROUTES.has(pathname);
-
-  if (!hasSession && !isPublicRoute) {
-    const url = new URL("/login", request.url);
-    return NextResponse.redirect(url);
-  }
 
   if (hasSession && isPublicRoute) {
     return NextResponse.redirect(new URL("/", request.url));

@@ -4,9 +4,16 @@ import { useState, useEffect, type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query/queryClient";
 import { RepositoryProvider } from "./RepositoryProvider";
+import { SyncProvider } from "./SyncProvider";
 import { seedIfEmpty, migrateExerciseLibraryIfNeeded } from "@/lib/db/seed";
 
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({
+  userEmail = null,
+  children,
+}: {
+  userEmail?: string | null;
+  children: ReactNode;
+}) {
   const [queryClient] = useState(createQueryClient);
   const [isSeeded, setIsSeeded] = useState(false);
 
@@ -18,7 +25,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RepositoryProvider>{isSeeded ? children : <AppBootScreen />}</RepositoryProvider>
+      <RepositoryProvider>
+        {isSeeded ? (
+          // Gated on isSeeded so the initial sync pull never races the
+          // first-run seed writing to the same Dexie tables.
+          <SyncProvider userEmail={userEmail}>{children}</SyncProvider>
+        ) : (
+          <AppBootScreen />
+        )}
+      </RepositoryProvider>
     </QueryClientProvider>
   );
 }

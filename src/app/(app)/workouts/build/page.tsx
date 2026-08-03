@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, FormField, Input, Select } from "@/components/ui";
+import { Badge, Button, Card, FormField, Input, Modal, Select } from "@/components/ui";
 import { useExercises, useExerciseMap } from "@/features/workouts/hooks/useExercises";
 import { useCreateWorkoutSession } from "@/features/workouts/hooks/useWorkoutSessions";
 import { TemplateForm } from "@/features/workouts/components/TemplateForm";
@@ -132,6 +132,7 @@ export default function BuildWorkoutPage() {
   const [wodResult, setWodResult] = useState<WodResult | null>(null);
   const [showAllLifts, setShowAllLifts] = useState(false);
   const [openInstructionsId, setOpenInstructionsId] = useState<ID | null>(null);
+  const [openCategory, setOpenCategory] = useState<{ label: string; groups: string[] } | null>(null);
 
   const isCrossfit = style === "crossfit";
 
@@ -142,7 +143,18 @@ export default function BuildWorkoutPage() {
     setWodResult(null);
   }
 
-  function toggleCategory(groups: string[]) {
+  function toggleGroup(group: string) {
+    setSelectedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
+    setGenerated(null);
+    setWodResult(null);
+  }
+
+  function toggleCategoryAll(groups: string[]) {
     setSelectedGroups((prev) => {
       const allActive = groups.every((g) => prev.has(g));
       const next = new Set(prev);
@@ -302,24 +314,65 @@ export default function BuildWorkoutPage() {
         )}
         <div className="flex flex-wrap gap-2">
           {muscleCategories.map((category) => {
-            const active = category.groups.length > 0 && category.groups.every((g) => selectedGroups.has(g));
+            const selectedCount = category.groups.filter((g) => selectedGroups.has(g)).length;
+            const allActive = category.groups.length > 0 && selectedCount === category.groups.length;
+            const partial = selectedCount > 0 && !allActive;
             return (
               <button
                 key={category.label}
                 type="button"
-                onClick={() => toggleCategory(category.groups)}
+                onClick={() => setOpenCategory(category)}
                 className={
-                  active
+                  allActive
                     ? "rounded-full bg-fitness px-4 py-1.5 text-sm font-medium text-white"
-                    : "rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-surface-muted"
+                    : partial
+                      ? "rounded-full border-2 border-fitness bg-fitness/10 px-4 py-1.5 text-sm font-medium text-fitness"
+                      : "rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-surface-muted"
                 }
               >
                 {category.label}
+                {partial ? ` (${selectedCount})` : ""}
               </button>
             );
           })}
         </div>
+        <p className="text-xs text-muted-foreground">Tap a category to pick specific muscles to train.</p>
       </Card>
+
+      {openCategory && (
+        <Modal open={!!openCategory} onClose={() => setOpenCategory(null)} title={`${openCategory.label} — pick muscles`}>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => toggleCategoryAll(openCategory.groups)}
+              >
+                {openCategory.groups.every((g) => selectedGroups.has(g)) ? "Clear all" : "Select all"}
+              </Button>
+            </div>
+            <div className="grid gap-1 sm:grid-cols-2">
+              {openCategory.groups.map((group) => (
+                <label
+                  key={group}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm capitalize hover:bg-surface-muted"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedGroups.has(group)}
+                    onChange={() => toggleGroup(group)}
+                  />
+                  {group}
+                </label>
+              ))}
+            </div>
+            <Button onClick={() => setOpenCategory(null)} className="w-full">
+              Done
+            </Button>
+          </div>
+        </Modal>
+      )}
 
       <Card className="space-y-3">
         <h2 className="text-sm font-semibold">Equipment &amp; level (optional)</h2>

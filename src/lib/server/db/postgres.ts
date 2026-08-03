@@ -1,7 +1,7 @@
 import "server-only";
 import { Pool } from "pg";
 import { postgresConnectionString } from "./env";
-import type { DbDriver, DbUser, DbSessionWithUser } from "./types";
+import type { DbDriver, DbUser, DbSessionWithUser, DbUserData } from "./types";
 
 // Plain node-postgres over the standard wire protocol (TCP+TLS) — works
 // against any real Postgres server (Prisma Postgres, Supabase, RDS, a
@@ -33,6 +33,13 @@ function ensureSchema(): Promise<void> {
         )
       `);
       await pool.query(`CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id)`);
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_data (
+          user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+          data TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
     })();
   }
   return schemaReady;
@@ -80,5 +87,23 @@ export const postgresDriver: DbDriver = {
   async deleteSession(sessionId) {
     await ensureSchema();
     await pool.query(`DELETE FROM sessions WHERE id = $1`, [sessionId]);
+  },
+
+  async getUserData(userId) {
+    await ensureSchema();
+    const { rows } = await pool.query<DbUserData>(
+      `SELECT data, updated_at as "updatedAt" FROM user_data WHERE user_id = $1`,
+      [userId],
+    );
+    return rows[0];
+  },
+
+  async setUserData(userId, data, updatedAt) {
+    await ensureSchema();
+    await pool.query(
+      `INSERT INTO user_data (user_id, data, updated_at) VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET data = $2, updated_at = $3`,
+      [userId, data, updatedAt],
+    );
   },
 };

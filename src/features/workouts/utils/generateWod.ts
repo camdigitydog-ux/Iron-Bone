@@ -155,6 +155,11 @@ const NAMED_REPS: Record<string, number> = {
   "Run (Meters)": 400,
 };
 
+/** The movements that exist specifically for WOD metcons — not appropriate for
+ * a straight-sets General/Bodybuilding/Powerlifting/Functional session, so
+ * generateWorkout.ts hard-excludes anything in this list. */
+export const WOD_ONLY_MOVEMENTS = new Set(Object.keys(NAMED_REPS));
+
 // Standard Rx loads (men's) for the loaded movements — the actual numbers
 // competitors would recognize (e.g. Fran's 95 lb thruster). Shown as a
 // starting point; scale to whatever's appropriate.

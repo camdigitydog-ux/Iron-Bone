@@ -30,6 +30,14 @@ export default function RunPlanPage() {
 
       {hasGeneratedRacePlan && plan ? (
         <>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Your active plan
+            </p>
+            <p className="text-xs text-muted-foreground">
+              This is what&rsquo;s driving today&rsquo;s suggested run on the Running tab, home page, and planner.
+            </p>
+          </div>
           <PlanOverview plan={plan} />
           <button
             type="button"
