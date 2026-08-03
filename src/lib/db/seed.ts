@@ -18,6 +18,7 @@ import type {
 const SEEDED_FLAG_KEY = "hasSeededInitialData";
 const EXERCISE_LIBRARY_MIGRATION_KEY = "hasMigratedExerciseLibraryV4";
 const FOOD_LIBRARY_MIGRATION_KEY = "hasMigratedFoodLibraryV2";
+const FOOD_NUTRIENTS_MIGRATION_KEY = "hasMigratedFoodNutrientsV1";
 
 interface ExerciseSeed {
   name: string;
@@ -1207,70 +1208,73 @@ type FoodSeed = [name: string, servingSize: number, servingUnit: string, macros:
 
 // Macro values are standard USDA-style figures for the common preparation named
 // (e.g. "cooked", "raw", "steamed") — the same reference figures used in most
-// nutrition-tracking apps and food-label databases.
+// nutrition-tracking apps and food-label databases. Fiber/sugar/sodium are the
+// same USDA FoodData Central-style figures for that preparation; sodium in
+// particular assumes no added table salt during cooking unless the food is
+// inherently salted (e.g. cheese, canned tuna, bread).
 const CURATED_FOODS: FoodSeed[] = [
   // Protein
-  ["Chicken Breast (cooked)", 3.5, "oz", { calories: 165, proteinG: 31, carbsG: 0, fatG: 3.6 }],
-  ["Turkey Breast (roasted)", 3.5, "oz", { calories: 135, proteinG: 30.1, carbsG: 0, fatG: 0.7 }],
-  ["Lean Ground Beef 93/7 (cooked)", 3.5, "oz", { calories: 152, proteinG: 21, carbsG: 0, fatG: 7 }],
-  ["Salmon (cooked)", 3.5, "oz", { calories: 208, proteinG: 20.4, carbsG: 0, fatG: 13.4 }],
-  ["Tuna (canned in water)", 3.5, "oz", { calories: 116, proteinG: 25.5, carbsG: 0, fatG: 0.8 }],
-  ["Shrimp (cooked)", 3.5, "oz", { calories: 99, proteinG: 24, carbsG: 0.2, fatG: 0.3 }],
-  ["Pork Tenderloin (cooked)", 3.5, "oz", { calories: 143, proteinG: 26, carbsG: 0, fatG: 3.5 }],
-  ["Egg (whole)", 1, "piece", { calories: 72, proteinG: 6.3, carbsG: 0.4, fatG: 4.8 }],
-  ["Egg White", 1, "piece", { calories: 17, proteinG: 3.6, carbsG: 0.2, fatG: 0.1 }],
-  ["Tofu (firm)", 3.5, "oz", { calories: 76, proteinG: 8, carbsG: 1.9, fatG: 4.8 }],
-  ["Black Beans (cooked)", 3.5, "oz", { calories: 132, proteinG: 8.9, carbsG: 23.7, fatG: 0.5 }],
-  ["Lentils (cooked)", 3.5, "oz", { calories: 116, proteinG: 9, carbsG: 20.1, fatG: 0.4 }],
-  ["Cottage Cheese (2%)", 3.5, "oz", { calories: 84, proteinG: 11.1, carbsG: 4.3, fatG: 2.3 }],
-  ["Greek Yogurt (plain, 2%)", 3.5, "oz", { calories: 73, proteinG: 9.9, carbsG: 3.8, fatG: 1.9 }],
-  ["Whey Protein Powder", 1, "scoop", { calories: 120, proteinG: 24, carbsG: 3, fatG: 1.5 }],
-  ["Protein Bar (generic)", 1, "bar", { calories: 200, proteinG: 20, carbsG: 22, fatG: 7 }],
+  ["Chicken Breast (cooked)", 3.5, "oz", { calories: 165, proteinG: 31, carbsG: 0, fatG: 3.6, fiberG: 0, sugarG: 0, sodiumMg: 74 }],
+  ["Turkey Breast (roasted)", 3.5, "oz", { calories: 135, proteinG: 30.1, carbsG: 0, fatG: 0.7, fiberG: 0, sugarG: 0, sodiumMg: 63 }],
+  ["Lean Ground Beef 93/7 (cooked)", 3.5, "oz", { calories: 152, proteinG: 21, carbsG: 0, fatG: 7, fiberG: 0, sugarG: 0, sodiumMg: 75 }],
+  ["Salmon (cooked)", 3.5, "oz", { calories: 208, proteinG: 20.4, carbsG: 0, fatG: 13.4, fiberG: 0, sugarG: 0, sodiumMg: 59 }],
+  ["Tuna (canned in water)", 3.5, "oz", { calories: 116, proteinG: 25.5, carbsG: 0, fatG: 0.8, fiberG: 0, sugarG: 0, sodiumMg: 300 }],
+  ["Shrimp (cooked)", 3.5, "oz", { calories: 99, proteinG: 24, carbsG: 0.2, fatG: 0.3, fiberG: 0, sugarG: 0, sodiumMg: 111 }],
+  ["Pork Tenderloin (cooked)", 3.5, "oz", { calories: 143, proteinG: 26, carbsG: 0, fatG: 3.5, fiberG: 0, sugarG: 0, sodiumMg: 50 }],
+  ["Egg (whole)", 1, "piece", { calories: 72, proteinG: 6.3, carbsG: 0.4, fatG: 4.8, fiberG: 0, sugarG: 0.2, sodiumMg: 71 }],
+  ["Egg White", 1, "piece", { calories: 17, proteinG: 3.6, carbsG: 0.2, fatG: 0.1, fiberG: 0, sugarG: 0.2, sodiumMg: 55 }],
+  ["Tofu (firm)", 3.5, "oz", { calories: 76, proteinG: 8, carbsG: 1.9, fatG: 4.8, fiberG: 0.9, sugarG: 0.6, sodiumMg: 7 }],
+  ["Black Beans (cooked)", 3.5, "oz", { calories: 132, proteinG: 8.9, carbsG: 23.7, fatG: 0.5, fiberG: 8.7, sugarG: 0.3, sodiumMg: 2 }],
+  ["Lentils (cooked)", 3.5, "oz", { calories: 116, proteinG: 9, carbsG: 20.1, fatG: 0.4, fiberG: 7.9, sugarG: 1.8, sodiumMg: 2 }],
+  ["Cottage Cheese (2%)", 3.5, "oz", { calories: 84, proteinG: 11.1, carbsG: 4.3, fatG: 2.3, fiberG: 0, sugarG: 4.1, sodiumMg: 364 }],
+  ["Greek Yogurt (plain, 2%)", 3.5, "oz", { calories: 73, proteinG: 9.9, carbsG: 3.8, fatG: 1.9, fiberG: 0, sugarG: 3.6, sodiumMg: 36 }],
+  ["Whey Protein Powder", 1, "scoop", { calories: 120, proteinG: 24, carbsG: 3, fatG: 1.5, fiberG: 1, sugarG: 2, sodiumMg: 50 }],
+  ["Protein Bar (generic)", 1, "bar", { calories: 200, proteinG: 20, carbsG: 22, fatG: 7, fiberG: 7, sugarG: 5, sodiumMg: 200 }],
 
   // Carbohydrate
-  ["Brown Rice (cooked)", 3.5, "oz", { calories: 112, proteinG: 2.3, carbsG: 23.5, fatG: 0.8 }],
-  ["White Rice (cooked)", 3.5, "oz", { calories: 130, proteinG: 2.7, carbsG: 28.2, fatG: 0.3 }],
-  ["Quinoa (cooked)", 3.5, "oz", { calories: 120, proteinG: 4.4, carbsG: 21.3, fatG: 1.9 }],
-  ["Pasta (cooked)", 3.5, "oz", { calories: 131, proteinG: 5, carbsG: 25, fatG: 1.1 }],
-  ["Rolled Oats (dry)", 3.5, "oz", { calories: 379, proteinG: 13.2, carbsG: 67.7, fatG: 6.5 }],
-  ["Sweet Potato (baked)", 3.5, "oz", { calories: 90, proteinG: 2, carbsG: 20.7, fatG: 0.1 }],
-  ["Potato (baked, with skin)", 3.5, "oz", { calories: 93, proteinG: 2.5, carbsG: 21, fatG: 0.1 }],
-  ["Whole Wheat Bread", 1, "slice", { calories: 81, proteinG: 4, carbsG: 13.8, fatG: 1.1 }],
-  ["White Bread", 1, "slice", { calories: 79, proteinG: 2.7, carbsG: 14.7, fatG: 1 }],
-  ["Corn Tortilla", 1, "piece", { calories: 52, proteinG: 1.4, carbsG: 10.7, fatG: 0.6 }],
+  ["Brown Rice (cooked)", 3.5, "oz", { calories: 112, proteinG: 2.3, carbsG: 23.5, fatG: 0.8, fiberG: 1.8, sugarG: 0.2, sodiumMg: 1 }],
+  ["White Rice (cooked)", 3.5, "oz", { calories: 130, proteinG: 2.7, carbsG: 28.2, fatG: 0.3, fiberG: 0.4, sugarG: 0.1, sodiumMg: 1 }],
+  ["Quinoa (cooked)", 3.5, "oz", { calories: 120, proteinG: 4.4, carbsG: 21.3, fatG: 1.9, fiberG: 2.8, sugarG: 0.9, sodiumMg: 7 }],
+  ["Pasta (cooked)", 3.5, "oz", { calories: 131, proteinG: 5, carbsG: 25, fatG: 1.1, fiberG: 1.8, sugarG: 0.6, sodiumMg: 6 }],
+  ["Rolled Oats (dry)", 3.5, "oz", { calories: 379, proteinG: 13.2, carbsG: 67.7, fatG: 6.5, fiberG: 10.1, sugarG: 1, sodiumMg: 6 }],
+  ["Sweet Potato (baked)", 3.5, "oz", { calories: 90, proteinG: 2, carbsG: 20.7, fatG: 0.1, fiberG: 3.3, sugarG: 6.5, sodiumMg: 36 }],
+  ["Potato (baked, with skin)", 3.5, "oz", { calories: 93, proteinG: 2.5, carbsG: 21, fatG: 0.1, fiberG: 2.2, sugarG: 1.2, sodiumMg: 10 }],
+  ["Whole Wheat Bread", 1, "slice", { calories: 81, proteinG: 4, carbsG: 13.8, fatG: 1.1, fiberG: 1.9, sugarG: 1.6, sodiumMg: 144 }],
+  ["White Bread", 1, "slice", { calories: 79, proteinG: 2.7, carbsG: 14.7, fatG: 1, fiberG: 0.8, sugarG: 1.4, sodiumMg: 152 }],
+  ["Corn Tortilla", 1, "piece", { calories: 52, proteinG: 1.4, carbsG: 10.7, fatG: 0.6, fiberG: 1.5, sugarG: 0.2, sodiumMg: 11 }],
 
   // Fat
-  ["Olive Oil", 1, "tbsp", { calories: 119, proteinG: 0, carbsG: 0, fatG: 13.5 }],
-  ["Almonds", 1, "oz", { calories: 164, proteinG: 6, carbsG: 6.1, fatG: 14.2 }],
-  ["Walnuts", 1, "oz", { calories: 185, proteinG: 4.3, carbsG: 3.9, fatG: 18.5 }],
-  ["Peanut Butter", 2, "tbsp", { calories: 188, proteinG: 8, carbsG: 6, fatG: 16 }],
-  ["Avocado", 0.5, "piece", { calories: 120, proteinG: 1.5, carbsG: 6.4, fatG: 10.9 }],
-  ["Chia Seeds", 1, "tbsp", { calories: 58, proteinG: 2, carbsG: 5, fatG: 3.7 }],
-  ["Butter", 1, "tbsp", { calories: 102, proteinG: 0.1, carbsG: 0, fatG: 11.5 }],
+  ["Olive Oil", 1, "tbsp", { calories: 119, proteinG: 0, carbsG: 0, fatG: 13.5, fiberG: 0, sugarG: 0, sodiumMg: 0 }],
+  ["Almonds", 1, "oz", { calories: 164, proteinG: 6, carbsG: 6.1, fatG: 14.2, fiberG: 3.5, sugarG: 1.2, sodiumMg: 0 }],
+  ["Walnuts", 1, "oz", { calories: 185, proteinG: 4.3, carbsG: 3.9, fatG: 18.5, fiberG: 1.9, sugarG: 0.7, sodiumMg: 1 }],
+  ["Peanut Butter", 2, "tbsp", { calories: 188, proteinG: 8, carbsG: 6, fatG: 16, fiberG: 1.6, sugarG: 3, sodiumMg: 152 }],
+  ["Avocado", 0.5, "piece", { calories: 120, proteinG: 1.5, carbsG: 6.4, fatG: 10.9, fiberG: 5, sugarG: 0.3, sodiumMg: 5 }],
+  ["Chia Seeds", 1, "tbsp", { calories: 58, proteinG: 2, carbsG: 5, fatG: 3.7, fiberG: 4.1, sugarG: 0, sodiumMg: 1 }],
+  ["Butter", 1, "tbsp", { calories: 102, proteinG: 0.1, carbsG: 0, fatG: 11.5, fiberG: 0, sugarG: 0, sodiumMg: 82 }],
 
   // Vegetables
-  ["Broccoli (steamed)", 3.5, "oz", { calories: 35, proteinG: 2.4, carbsG: 7.2, fatG: 0.4 }],
-  ["Spinach (raw)", 3.5, "oz", { calories: 23, proteinG: 2.9, carbsG: 3.6, fatG: 0.4 }],
-  ["Bell Pepper (raw)", 3.5, "oz", { calories: 31, proteinG: 1, carbsG: 6, fatG: 0.3 }],
-  ["Carrots (raw)", 3.5, "oz", { calories: 41, proteinG: 0.9, carbsG: 9.6, fatG: 0.2 }],
-  ["Asparagus (steamed)", 3.5, "oz", { calories: 22, proteinG: 2.4, carbsG: 4.1, fatG: 0.2 }],
-  ["Green Beans (steamed)", 3.5, "oz", { calories: 35, proteinG: 1.9, carbsG: 8, fatG: 0.2 }],
-  ["Cauliflower (steamed)", 3.5, "oz", { calories: 23, proteinG: 1.8, carbsG: 4.1, fatG: 0.5 }],
-  ["Mixed Salad Greens", 3.5, "oz", { calories: 15, proteinG: 1.4, carbsG: 2.9, fatG: 0.2 }],
+  ["Broccoli (steamed)", 3.5, "oz", { calories: 35, proteinG: 2.4, carbsG: 7.2, fatG: 0.4, fiberG: 3.3, sugarG: 1.4, sodiumMg: 34 }],
+  ["Spinach (raw)", 3.5, "oz", { calories: 23, proteinG: 2.9, carbsG: 3.6, fatG: 0.4, fiberG: 2.2, sugarG: 0.4, sodiumMg: 79 }],
+  ["Bell Pepper (raw)", 3.5, "oz", { calories: 31, proteinG: 1, carbsG: 6, fatG: 0.3, fiberG: 2.1, sugarG: 4.2, sodiumMg: 4 }],
+  ["Carrots (raw)", 3.5, "oz", { calories: 41, proteinG: 0.9, carbsG: 9.6, fatG: 0.2, fiberG: 2.8, sugarG: 4.7, sodiumMg: 69 }],
+  ["Asparagus (steamed)", 3.5, "oz", { calories: 22, proteinG: 2.4, carbsG: 4.1, fatG: 0.2, fiberG: 2, sugarG: 1.3, sodiumMg: 14 }],
+  ["Green Beans (steamed)", 3.5, "oz", { calories: 35, proteinG: 1.9, carbsG: 8, fatG: 0.2, fiberG: 3.4, sugarG: 3.3, sodiumMg: 6 }],
+  ["Cauliflower (steamed)", 3.5, "oz", { calories: 23, proteinG: 1.8, carbsG: 4.1, fatG: 0.5, fiberG: 2.3, sugarG: 1.3, sodiumMg: 15 }],
+  ["Mixed Salad Greens", 3.5, "oz", { calories: 15, proteinG: 1.4, carbsG: 2.9, fatG: 0.2, fiberG: 1.3, sugarG: 0.4, sodiumMg: 28 }],
 
   // Fruit
-  ["Apple", 1, "piece", { calories: 95, proteinG: 0.5, carbsG: 25, fatG: 0.3 }],
-  ["Banana", 1, "piece", { calories: 105, proteinG: 1.3, carbsG: 27, fatG: 0.4 }],
-  ["Orange", 1, "piece", { calories: 62, proteinG: 1.2, carbsG: 15.4, fatG: 0.2 }],
-  ["Strawberries", 3.5, "oz", { calories: 32, proteinG: 0.7, carbsG: 7.7, fatG: 0.3 }],
-  ["Blueberries", 3.5, "oz", { calories: 57, proteinG: 0.7, carbsG: 14.5, fatG: 0.3 }],
-  ["Grapes", 3.5, "oz", { calories: 69, proteinG: 0.7, carbsG: 18.1, fatG: 0.2 }],
+  ["Apple", 1, "piece", { calories: 95, proteinG: 0.5, carbsG: 25, fatG: 0.3, fiberG: 4.4, sugarG: 19, sodiumMg: 2 }],
+  ["Banana", 1, "piece", { calories: 105, proteinG: 1.3, carbsG: 27, fatG: 0.4, fiberG: 3.1, sugarG: 14.4, sodiumMg: 1 }],
+  ["Orange", 1, "piece", { calories: 62, proteinG: 1.2, carbsG: 15.4, fatG: 0.2, fiberG: 3.1, sugarG: 12.2, sodiumMg: 0 }],
+  ["Strawberries", 3.5, "oz", { calories: 32, proteinG: 0.7, carbsG: 7.7, fatG: 0.3, fiberG: 2, sugarG: 4.9, sodiumMg: 1 }],
+  ["Blueberries", 3.5, "oz", { calories: 57, proteinG: 0.7, carbsG: 14.5, fatG: 0.3, fiberG: 2.4, sugarG: 10, sodiumMg: 1 }],
+  ["Grapes", 3.5, "oz", { calories: 69, proteinG: 0.7, carbsG: 18.1, fatG: 0.2, fiberG: 0.9, sugarG: 15.5, sodiumMg: 2 }],
 
   // Dairy
-  ["Milk (2%)", 1, "cup", { calories: 122, proteinG: 8.1, carbsG: 11.7, fatG: 4.8 }],
-  ["Milk (whole)", 1, "cup", { calories: 149, proteinG: 7.7, carbsG: 11.7, fatG: 7.9 }],
-  ["Cheddar Cheese", 1, "oz", { calories: 113, proteinG: 7, carbsG: 0.4, fatG: 9.3 }],
-  ["String Cheese", 1, "piece", { calories: 80, proteinG: 7, carbsG: 1, fatG: 6 }],
+  ["Milk (2%)", 1, "cup", { calories: 122, proteinG: 8.1, carbsG: 11.7, fatG: 4.8, fiberG: 0, sugarG: 12.3, sodiumMg: 115 }],
+  ["Milk (whole)", 1, "cup", { calories: 149, proteinG: 7.7, carbsG: 11.7, fatG: 7.9, fiberG: 0, sugarG: 12.3, sodiumMg: 105 }],
+  ["Cheddar Cheese", 1, "oz", { calories: 113, proteinG: 7, carbsG: 0.4, fatG: 9.3, fiberG: 0, sugarG: 0.1, sodiumMg: 174 }],
+  ["String Cheese", 1, "piece", { calories: 80, proteinG: 7, carbsG: 1, fatG: 6, fiberG: 0, sugarG: 0, sodiumMg: 200 }],
 ];
 
 function foodSeedName(seed: FoodSeed): string {
@@ -1295,6 +1299,37 @@ async function migrateFoodLibrary(): Promise<void> {
 
   const toAdd = CURATED_FOODS.filter((seed) => !existingNames.has(foodSeedName(seed))).map(buildFoodItem);
   if (toAdd.length > 0) await db.foodItems.bulkAdd(toAdd);
+}
+
+/** Backfills fiber/sugar/sodium onto curated foods a device seeded before
+ * those fields existed — matched and updated by name like
+ * migrateExerciseLibrary updates rich exercise metadata, rather than just
+ * adding what's missing, since these rows already exist and just need their
+ * macrosPerServing patched. Never touches a user's own custom foods. */
+async function migrateFoodNutrients(): Promise<void> {
+  const existing = await db.foodItems.toArray();
+  const existingByName = new Map(
+    existing.filter((food) => !food.isCustom).map((food) => [food.name, food]),
+  );
+
+  const toUpdate: FoodItem[] = [];
+  for (const seed of CURATED_FOODS) {
+    const current = existingByName.get(foodSeedName(seed));
+    if (!current) continue; // handled by migrateFoodLibrary instead
+    const [, , , macros] = seed;
+    toUpdate.push({
+      ...current,
+      macrosPerServing: {
+        ...current.macrosPerServing,
+        fiberG: macros.fiberG,
+        sugarG: macros.sugarG,
+        sodiumMg: macros.sodiumMg,
+      },
+      updatedAt: nowIso(),
+    });
+  }
+
+  if (toUpdate.length > 0) await db.foodItems.bulkPut(toUpdate);
 }
 
 async function seedWorkoutTemplate(exerciseIds: Record<string, string>): Promise<void> {
@@ -1416,6 +1451,7 @@ export async function seedIfEmpty(): Promise<void> {
       await db.meta.put({ key: SEEDED_FLAG_KEY, value: "true" });
       await db.meta.put({ key: EXERCISE_LIBRARY_MIGRATION_KEY, value: "true" });
       await db.meta.put({ key: FOOD_LIBRARY_MIGRATION_KEY, value: "true" });
+      await db.meta.put({ key: FOOD_NUTRIENTS_MIGRATION_KEY, value: "true" });
     },
   );
 }
@@ -1441,5 +1477,17 @@ export async function migrateFoodLibraryIfNeeded(): Promise<void> {
   await db.transaction("rw", [db.foodItems, db.meta], async () => {
     await migrateFoodLibrary();
     await db.meta.put({ key: FOOD_LIBRARY_MIGRATION_KEY, value: "true" });
+  });
+}
+
+/** Runs once per device to backfill fiber/sugar/sodium onto an existing food
+ * library's curated rows — safe to call unconditionally on every app start. */
+export async function migrateFoodNutrientsIfNeeded(): Promise<void> {
+  const flag = await db.meta.get(FOOD_NUTRIENTS_MIGRATION_KEY);
+  if (flag) return;
+
+  await db.transaction("rw", [db.foodItems, db.meta], async () => {
+    await migrateFoodNutrients();
+    await db.meta.put({ key: FOOD_NUTRIENTS_MIGRATION_KEY, value: "true" });
   });
 }

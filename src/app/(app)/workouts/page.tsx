@@ -26,6 +26,11 @@ export default function WorkoutsPage() {
               Build workout
             </Button>
           </Link>
+          <Link href="/workouts/progress" className="shrink-0">
+            <Button variant="secondary" size="sm" className="whitespace-nowrap">
+              Progress
+            </Button>
+          </Link>
           <Link href="/workouts/new" className="shrink-0">
             <Button size="sm" tone="fitness" className="whitespace-nowrap">
               Start blank

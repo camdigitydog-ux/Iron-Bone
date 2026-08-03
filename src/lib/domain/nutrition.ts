@@ -1,3 +1,4 @@
+import { sumMacros } from "./common";
 import type { BaseEntity, ID, Macros } from "./common";
 
 export interface FoodItem extends BaseEntity {
@@ -40,6 +41,10 @@ export interface NutritionGoal extends BaseEntity {
    * calculated rather than entered by hand — lets the app notice when
    * weight has drifted enough (10-15lb) to be worth recalculating. */
   basedOnWeightLb?: number;
+  /** Optional daily fiber target — no goal-calculator support for this yet, so
+   * it's normally unset; MacroSummary falls back to the FDA Daily Value (28g)
+   * when absent rather than leaving the fiber row without a target. */
+  fiberG?: number;
 }
 
 export interface BodyWeightEntry extends BaseEntity {
@@ -49,13 +54,5 @@ export interface BodyWeightEntry extends BaseEntity {
 }
 
 export function mealMacros(meal: MealEntry): Macros {
-  return meal.items.reduce(
-    (total, item) => ({
-      calories: total.calories + item.macros.calories,
-      proteinG: total.proteinG + item.macros.proteinG,
-      carbsG: total.carbsG + item.macros.carbsG,
-      fatG: total.fatG + item.macros.fatG,
-    }),
-    { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 },
-  );
+  return sumMacros(meal.items.map((item) => item.macros));
 }

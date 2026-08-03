@@ -14,7 +14,10 @@ export interface LastPerformance {
 // upper body per session (e.g. StrongLifts, Starting Strength).
 const LOWER_BODY_PATTERNS = new Set<MovementPattern>(["squat", "hinge", "lunge"]);
 
-function topSetOf(sets: SetEntry[]): SetEntry | undefined {
+/** The set that best represents effort for a given exercise in a session —
+ * highest weight x reps among non-warmup sets — shared by the "last time"
+ * reference and the 1RM progress trend so both agree on what "top set" means. */
+export function topSetOf(sets: SetEntry[]): SetEntry | undefined {
   const workingSets = sets.filter((set) => !set.isWarmup && set.weightLb > 0 && set.reps > 0);
   if (workingSets.length === 0) return undefined;
   return workingSets.reduce((best, set) =>

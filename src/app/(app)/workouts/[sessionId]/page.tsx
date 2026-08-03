@@ -12,6 +12,7 @@ import {
 import { useExerciseMap } from "@/features/workouts/hooks/useExercises";
 import { SessionExerciseCard } from "@/features/workouts/components/SessionExerciseCard";
 import { ExercisePicker } from "@/features/workouts/components/ExercisePicker";
+import { PostWorkoutNutritionDisclosure } from "@/features/workouts/components/PostWorkoutNutritionDisclosure";
 import { findLastPerformance } from "@/features/workouts/utils/exerciseHistory";
 import { formatFriendlyDate } from "@/lib/utils/date";
 import { newId } from "@/lib/utils/id";
@@ -67,7 +68,9 @@ export default function WorkoutSessionPage() {
       id: session!.id,
       patch: { exercises, notes, completedAt: new Date().toISOString() },
     });
-    router.push("/workouts");
+    // Stay on the page instead of redirecting immediately — the post-workout
+    // nutrition tip below only has a moment to be seen if we don't bounce
+    // straight back to the list.
   }
 
   async function handleDelete() {
@@ -88,6 +91,13 @@ export default function WorkoutSessionPage() {
           Delete
         </Button>
       </div>
+
+      {session.completedAt && (
+        <div className="rounded-lg border border-dashed border-fitness/40 bg-fitness/10 px-3 py-2">
+          <p className="text-sm font-semibold text-fitness">Workout complete — nice work.</p>
+          <PostWorkoutNutritionDisclosure />
+        </div>
+      )}
 
       <div className="space-y-3">
         {exercises.map((sessionExercise) => (
@@ -127,7 +137,11 @@ export default function WorkoutSessionPage() {
         <Button variant="secondary" onClick={handleSave} disabled={updateSession.isPending} className="flex-1">
           Save
         </Button>
-        {!session.completedAt && (
+        {session.completedAt ? (
+          <Button variant="secondary" onClick={() => router.push("/workouts")} className="flex-1">
+            Back to workouts
+          </Button>
+        ) : (
           <Button onClick={handleComplete} disabled={updateSession.isPending} tone="fitness" className="flex-1">
             Finish workout
           </Button>
