@@ -6,6 +6,8 @@ import { z } from "zod";
 import { Button, FormField, Input } from "@/components/ui";
 import { useCreateGoal } from "../hooks/useGoals";
 import { todayKey } from "@/lib/utils/date";
+import { GoalCalculator } from "./GoalCalculator";
+import type { CalculatedGoal } from "../utils/calculateGoal";
 import type { NutritionGoal } from "@/lib/domain";
 
 const goalSchema = z.object({
@@ -23,6 +25,7 @@ export function GoalForm({ currentGoal }: { currentGoal?: NutritionGoal | null }
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<GoalFormInput, unknown, GoalFormValues>({
     resolver: zodResolver(goalSchema),
@@ -38,8 +41,16 @@ export function GoalForm({ currentGoal }: { currentGoal?: NutritionGoal | null }
     await createGoal.mutateAsync({ effectiveDate: todayKey(), ...values });
   }
 
+  function handleCalculated(calculated: CalculatedGoal) {
+    setValue("dailyCalories", calculated.dailyCalories, { shouldValidate: true });
+    setValue("proteinG", calculated.proteinG, { shouldValidate: true });
+    setValue("carbsG", calculated.carbsG, { shouldValidate: true });
+    setValue("fatG", calculated.fatG, { shouldValidate: true });
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <GoalCalculator onCalculate={handleCalculated} />
       <div className="grid gap-3 sm:grid-cols-2">
         <FormField label="Daily calories" htmlFor="goal-calories" error={errors.dailyCalories?.message}>
           <Input id="goal-calories" type="number" {...register("dailyCalories")} />

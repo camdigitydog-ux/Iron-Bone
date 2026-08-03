@@ -51,12 +51,27 @@ const RACE_TYPE_LABELS: Record<RaceType, string> = {
   ultra: "Ultramarathon",
 };
 
-function peakLongRunMiles(raceType: RaceType, raceDistanceMiles: number): number {
-  if (raceType === "ultra" || raceDistanceMiles > 27) {
-    return Math.min(raceDistanceMiles * 0.5, 26);
-  }
-  if (raceDistanceMiles >= 22) return 20; // marathon-style: rarely run the full distance
-  return raceDistanceMiles * 1.1; // 5k..half: long run often exceeds race distance a little
+// Jack Daniels' long-run guideline: never let it exceed ~25-30% of weekly
+// mileage or run past ~2:30-3:00, since beyond that adds injury/burnout risk
+// without extra fitness benefit. Used both to cap the peak long run's time
+// and to size supporting runs so the split holds across the whole plan.
+const TARGET_LONG_RUN_SHARE = 0.28;
+const MAX_LONG_RUN_MINUTES = 180;
+
+function peakLongRunMiles(
+  raceType: RaceType,
+  raceDistanceMiles: number,
+  experience: RunningExperience,
+): number {
+  const distanceCap =
+    raceType === "ultra" || raceDistanceMiles > 27
+      ? Math.min(raceDistanceMiles * 0.5, 26)
+      : raceDistanceMiles >= 22
+        ? 20 // marathon-style: rarely run the full distance
+        : raceDistanceMiles * 1.1; // 5k..half: long run often exceeds race distance a little
+
+  const timeCapMiles = MAX_LONG_RUN_MINUTES / BASE_PACE_MIN_PER_MILE[experience];
+  return Math.min(distanceCap, timeCapMiles);
 }
 
 function phaseForWeek(weekNumber: number, totalWeeks: number): TrainingPhase {
@@ -78,16 +93,28 @@ function pickRunType(phase: TrainingPhase, index: number, supportingCount: numbe
   return "easy";
 }
 
-function supportingDistanceMiles(runType: RunType, longRunMiles: number): number {
-  const share: Record<RunType, number> = {
-    easy: 0.4,
-    tempo: 0.35,
-    interval: 0.3,
-    recovery: 0.25,
-    long: 1,
-    race: 1,
-  };
-  return Math.max(longRunMiles * share[runType], runType === "interval" ? 2 : 1.5);
+const RELATIVE_INTENSITY_WEIGHT: Record<RunType, number> = {
+  easy: 0.4,
+  tempo: 0.35,
+  interval: 0.3,
+  recovery: 0.25,
+  long: 1,
+  race: 1,
+};
+
+// Sizes every supporting run off the week's total volume — not off the long
+// run alone — so the long run actually lands at TARGET_LONG_RUN_SHARE of the
+// week regardless of how many supporting days there are. The remainder is
+// split across supporting days proportional to their relative intensity, so
+// a hard interval session still stays shorter than an easy day.
+function distributeSupportingMiles(types: RunType[], longRunMiles: number): number[] {
+  if (types.length === 0) return [];
+  const weeklyRemainder = longRunMiles * (1 / TARGET_LONG_RUN_SHARE - 1);
+  const totalWeight = types.reduce((sum, type) => sum + RELATIVE_INTENSITY_WEIGHT[type], 0);
+  return types.map((type) => {
+    const share = totalWeight > 0 ? (RELATIVE_INTENSITY_WEIGHT[type] / totalWeight) * weeklyRemainder : 0;
+    return round(Math.max(share, type === "interval" ? 2 : 1.5), 1);
+  });
 }
 
 function estimateDurationMin(
@@ -121,7 +148,7 @@ export function generateRunPlan({
   const totalWeeks = Math.min(Math.max(rawWeeks, 4), 24);
 
   const dayTemplate = DAY_TEMPLATES[daysPerWeek] ?? DAY_TEMPLATES[4];
-  const peakLong = peakLongRunMiles(raceType, raceDistanceMiles);
+  const peakLong = peakLongRunMiles(raceType, raceDistanceMiles, experience);
   const startLong = Math.max(Math.min(peakLong * 0.4, raceDistanceMiles * 0.3), 2);
 
   const weeks: RunPlanWeek[] = [];
@@ -142,16 +169,19 @@ export function generateRunPlan({
     longRunMiles = round(longRunMiles, 1);
 
     const supportingCount = dayTemplate.length - 1;
+    const supportingTypes: RunType[] = dayTemplate
+      .slice(0, -1)
+      .map((_, index) => pickRunType(phase, index, supportingCount));
+    const supportingDistances = distributeSupportingMiles(supportingTypes, longRunMiles);
+
     const plannedRuns: PlannedRun[] = dayTemplate.map((dayOfWeek, index) => {
       const isLongDay = index === dayTemplate.length - 1;
       const runType: RunType = isLongDay
         ? phase === "taper"
           ? "easy"
           : "long"
-        : pickRunType(phase, index, supportingCount);
-      const distanceMiles = isLongDay
-        ? longRunMiles
-        : round(supportingDistanceMiles(runType, longRunMiles), 1);
+        : supportingTypes[index];
+      const distanceMiles = isLongDay ? longRunMiles : supportingDistances[index];
       const durationMin = estimateDurationMin(distanceMiles, runType, experience);
 
       return {
