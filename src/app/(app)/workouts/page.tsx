@@ -13,7 +13,7 @@ export default function WorkoutsPage() {
 
   return (
     <div className="space-y-8">
-      <Card accent="fitness" className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Workouts</h1>
         <div className="flex flex-wrap gap-2">
           <Link href="/workouts/exercises" className="shrink-0">
@@ -32,9 +32,9 @@ export default function WorkoutsPage() {
             </Button>
           </Link>
         </div>
-      </Card>
+      </div>
 
-      <section className="space-y-3">
+      <Card accent="fitness" className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">Templates</h2>
           <Link href="/workouts/templates/new" className="text-xs font-medium text-fitness">
@@ -53,7 +53,7 @@ export default function WorkoutsPage() {
             ))}
           </div>
         )}
-      </section>
+      </Card>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">Recent sessions</h2>
