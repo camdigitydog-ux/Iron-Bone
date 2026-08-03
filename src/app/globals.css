@@ -249,3 +249,33 @@ body::after {
 ::selection {
   background: color-mix(in srgb, var(--brand) 30%, transparent);
 }
+
+/* The dashboard's hero numbers strike into place like a press stamping
+   numerals into metal — a literal version of the .stamped text-shadow that
+   otherwise just sits there statically. Runs once on load, staggered per
+   stat via --stamp-delay set inline. Skipped entirely under
+   prefers-reduced-motion instead of just shortening it, since the whole
+   point is the impact motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes stamp-in {
+    0% {
+      opacity: 0;
+      transform: scale(1.5) translateY(-8px);
+      filter: brightness(1.9);
+    }
+    55% {
+      opacity: 1;
+      transform: scale(0.94) translateY(0);
+      filter: brightness(1.15);
+    }
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+  }
+
+  .stamp-in {
+    animation: stamp-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--stamp-delay, 0ms);
+  }
+}

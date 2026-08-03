@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Badge, Button, Card, CardHeader, CardTitle, EmptyState } from "@/components/ui";
 import { useTodaySummary } from "@/features/dashboard/hooks/useTodaySummary";
@@ -52,7 +53,10 @@ export default function Home() {
         </div>
         <div className="relative z-[2] mt-5 flex items-stretch gap-6 border-t border-border/60 pt-4">
           <div>
-            <p className="font-stencil stamped text-4xl font-bold leading-none text-fitness">
+            <p
+              className="stamp-in font-stencil stamped text-4xl font-bold leading-none text-fitness"
+              style={{ "--stamp-delay": "0ms" } as CSSProperties}
+            >
               {summary.weeklyWorkoutCount}
             </p>
             <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -61,17 +65,36 @@ export default function Home() {
           </div>
           <div className="w-px bg-border/60" aria-hidden />
           <div>
-            <p className="font-stencil stamped text-4xl font-bold leading-none text-running">
+            <p
+              className="stamp-in font-stencil stamped text-4xl font-bold leading-none text-running"
+              style={{ "--stamp-delay": "90ms" } as CSSProperties}
+            >
               {round(summary.weeklyDistanceMiles, 1)}
             </p>
             <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Miles this wk
             </p>
           </div>
+          <div className="w-px bg-border/60" aria-hidden />
+          <div>
+            <p
+              className="stamp-in font-stencil stamped text-4xl font-bold leading-none text-nutrition"
+              style={{ "--stamp-delay": "180ms" } as CSSProperties}
+            >
+              {round(summary.consumedToday.calories)}
+            </p>
+            <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Cals today
+            </p>
+          </div>
         </div>
       </div>
 
-      <Card accent="fitness">
+      <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
+      <Card
+        accent="fitness"
+        className="transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_-4px_rgb(var(--shadow-color)/0.4)]"
+      >
         <CardHeader>
           <CardTitle>Workout</CardTitle>
           <Link href="/workouts" className="text-xs font-semibold text-fitness hover:underline">
@@ -114,7 +137,10 @@ export default function Home() {
         )}
       </Card>
 
-      <Card accent="running">
+      <Card
+        accent="running"
+        className="transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_-4px_rgb(var(--shadow-color)/0.4)]"
+      >
         <CardHeader>
           <CardTitle>Running</CardTitle>
           <Link href="/running" className="text-xs font-semibold text-running hover:underline">
@@ -168,7 +194,10 @@ export default function Home() {
         )}
       </Card>
 
-      <Card accent="nutrition">
+      <Card
+        accent="nutrition"
+        className="transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_-4px_rgb(var(--shadow-color)/0.4)]"
+      >
         <CardHeader>
           <CardTitle>Nutrition</CardTitle>
           <Link href="/nutrition" className="text-xs font-semibold text-nutrition hover:underline">
@@ -177,6 +206,7 @@ export default function Home() {
         </CardHeader>
         <MacroSummary consumed={summary.consumedToday} goal={summary.goal} bare />
       </Card>
+      </div>
     </div>
   );
 }
