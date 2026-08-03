@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button, EmptyState } from "@/components/ui";
+import { Button, Card, EmptyState } from "@/components/ui";
 import { useWorkoutTemplates } from "@/features/workouts/hooks/useWorkoutTemplates";
 import { useWorkoutSessions } from "@/features/workouts/hooks/useWorkoutSessions";
 import { TemplateCard } from "@/features/workouts/components/TemplateCard";
@@ -13,7 +13,7 @@ export default function WorkoutsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <Card accent="fitness" className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Workouts</h1>
         <div className="flex flex-wrap gap-2">
           <Link href="/workouts/exercises" className="shrink-0">
@@ -32,7 +32,7 @@ export default function WorkoutsPage() {
             </Button>
           </Link>
         </div>
-      </div>
+      </Card>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
