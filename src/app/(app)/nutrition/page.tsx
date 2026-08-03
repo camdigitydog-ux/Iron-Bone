@@ -31,17 +31,17 @@ export default function NutritionPage() {
         </div>
         <div className="flex gap-2">
           <Link href="/nutrition/foods">
-            <Button variant="secondary" size="sm">
+            <Button variant="secondary" size="sm" tone="nutrition">
               Foods
             </Button>
           </Link>
           <Link href="/nutrition/goals">
-            <Button variant="secondary" size="sm">
+            <Button variant="secondary" size="sm" tone="nutrition">
               Goals
             </Button>
           </Link>
           <Link href="/nutrition/history">
-            <Button variant="secondary" size="sm">
+            <Button variant="secondary" size="sm" tone="nutrition">
               History
             </Button>
           </Link>

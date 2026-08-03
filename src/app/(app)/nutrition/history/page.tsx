@@ -46,7 +46,7 @@ export default function NutritionHistoryPage() {
       <h1 className="text-xl font-semibold">Nutrition history</h1>
 
       {hasData ? (
-        <Card>
+        <Card accent="nutrition">
           <p className="mb-3 text-sm font-semibold">Daily calories (last 14 days)</p>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">

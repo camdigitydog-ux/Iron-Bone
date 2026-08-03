@@ -30,7 +30,7 @@ export function AppShell({
           )}
         </header>
         <main className="flex-1 px-4 pb-20 pt-4 md:px-8 md:pb-8 md:pt-6">
-          <div className="mx-auto w-full max-w-4xl">{children}</div>
+          <div className="mx-auto w-full max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">{children}</div>
         </main>
         <BottomNav />
       </div>

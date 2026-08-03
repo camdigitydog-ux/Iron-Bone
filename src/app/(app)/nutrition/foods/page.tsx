@@ -12,7 +12,7 @@ export default function FoodsPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Food library</h1>
 
-      <Card>
+      <Card accent="nutrition">
         <h2 className="mb-3 text-sm font-semibold">Add custom food</h2>
         <FoodForm />
       </Card>

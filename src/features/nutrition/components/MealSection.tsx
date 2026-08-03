@@ -58,7 +58,7 @@ export function MealSection({
   }
 
   return (
-    <Card className="space-y-3">
+    <Card accent="nutrition" className="space-y-3">
       <CardHeader>
         <CardTitle>{MEAL_LABELS[mealType]}</CardTitle>
         <span className="text-xs text-muted-foreground">{round(totals.calories)} kcal</span>

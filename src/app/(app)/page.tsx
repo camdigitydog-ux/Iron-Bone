@@ -175,7 +175,7 @@ export default function Home() {
             View all
           </Link>
         </CardHeader>
-        <MacroSummary consumed={summary.consumedToday} goal={summary.goal} />
+        <MacroSummary consumed={summary.consumedToday} goal={summary.goal} bare />
       </Card>
     </div>
   );

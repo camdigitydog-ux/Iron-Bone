@@ -13,7 +13,7 @@ export default function GoalsPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Nutrition goals</h1>
 
-      <Card>
+      <Card accent="nutrition">
         <h2 className="mb-3 text-sm font-semibold">Set daily targets</h2>
         <GoalForm currentGoal={currentGoal} />
       </Card>
