@@ -44,3 +44,39 @@ export function getOneRepMaxTrend(sessions: WorkoutSession[], exerciseId: ID): O
 
   return points;
 }
+
+export interface PlateauInfo {
+  peakOneRm: number;
+  currentOneRm: number;
+  flatSessions: number;
+}
+
+/**
+ * Flags a genuine plateau: the estimated 1RM hasn't set a new high across at
+ * least the last `minFlatSessions` (default 3) sessions that actually trained
+ * this lift — deliberately keyed off getOneRepMaxTrend's per-session points
+ * rather than calendar time, so a lift that's simply gone untrained for a few
+ * weeks isn't mistaken for one that's stalled out. Requires one session of
+ * history before the flat window too, so there's an established peak to
+ * compare against rather than just an early streak of identical numbers.
+ * The standard periodization response to a real plateau is a one-session
+ * deload — cutting the working weight ~10-20% to shed accumulated fatigue
+ * before resuming the push for a new max (Israetel et al., RP training
+ * volume/fatigue model; Helms et al., "The Muscle and Strength Pyramid:
+ * Training", autoregulation chapter).
+ */
+export function detectPlateau(trend: OneRepMaxDataPoint[], minFlatSessions = 3): PlateauInfo | undefined {
+  if (trend.length < minFlatSessions + 1) return undefined;
+
+  const windowStart = trend.length - minFlatSessions;
+  const priorPeak = Math.max(...trend.slice(0, windowStart).map((point) => point.estimatedOneRm));
+  const windowPeak = Math.max(...trend.slice(windowStart).map((point) => point.estimatedOneRm));
+
+  if (windowPeak > priorPeak) return undefined;
+
+  return {
+    peakOneRm: priorPeak,
+    currentOneRm: trend[trend.length - 1].estimatedOneRm,
+    flatSessions: minFlatSessions,
+  };
+}
